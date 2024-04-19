@@ -1,12 +1,6 @@
 .square_inner {
-    display: grid;
-    width: fit-content;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    margin: auto;
-    transform:  translateX(-50%) translateY(-50%) rotateX(45deg) rotateZ(-45deg);
-    box-shadow: -15px 15px 0px rgba(255, 255, 255, 0.3);
+    width: 100%;
+    height: 100%;
 }
 
 .square_outter{
@@ -17,20 +11,10 @@
     right:0px;
     bottom: 0px;
     margin: auto; */
-    height: 100vh;
+    height: 99vh;
+    margin:0;
     background-image: url("https://images-assets.nasa.gov/image/PIA05546/PIA05546~orig.jpg");
     background-repeat: repeat;
-}
-
-.tile {
-    border: 1px dashed black;
-    width: 30px;
-}
-.tile:hover {
-    border: 1px solid white;
-}
-.tile.focus{
-border: 2px solid red;
 }
 
 #square_view {

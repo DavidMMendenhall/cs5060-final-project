@@ -23,9 +23,15 @@ let selectTile = (tile, row, col) => {
 }
 
 let updateTile = () => {
-    myUI.update();
+    // myUI.draw();
 }
 
 addTileUpdateListener(updateTile);
 myUI.addClickListener(selectTile);
+
+let draw  = () => {
+    myUI.draw();
+    requestAnimationFrame(draw);
+} 
+requestAnimationFrame(draw);
 
