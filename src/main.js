@@ -39,7 +39,7 @@ let sumValuesAroundTile = (data, row, col, dist=1) => {
         }
 
         for(let c = col - dist; c <= col + dist; c++){
-            if(c < 0 || c >= data[r].length || r == row || c == col){
+            if(c < 0 || c >= data[r].length || (r == row && c == col)){
                 continue;
             }
             sum += data[r][c];
