@@ -1,4 +1,5 @@
 // @ts-check
+import { predictVillagesInFog } from "./predictVillage.js";
 import { createSquare } from "./square.js";
 import { createSquareUI } from "./ui/squareView.js";
 import { tileEditView, setTile, addTileUpdateListener } from "./ui/tileEditView.js";
@@ -20,10 +21,12 @@ squareHolder.appendChild(myUI.element);
  */
 let selectTile = (tile, row, col) => {
     setTile(tile);
+    myUI.setSelected(row, col);
 }
 
 let updateTile = () => {
-    // myUI.draw();
+    let predictionLayer = predictVillagesInFog(mySquare);
+    myUI.setPredictionLayer(predictionLayer);
 }
 
 addTileUpdateListener(updateTile);

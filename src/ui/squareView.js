@@ -30,6 +30,12 @@ let createSquareUI = (square) => {
     let hoveredTile = null;
     let hoveredTileRow = -1;
     let hoveredTileCol = -1;
+
+    let selectedTileRow = -1;
+    let selectedTileCol = -1;
+
+    /** @type {number[][] | null} */
+    let predictionLayer = null;
     /**
      * 
      * @param {MouseEvent} event 
@@ -91,15 +97,37 @@ let createSquareUI = (square) => {
                 ctx.beginPath();
                 ctx.rect(0, 0, 100, 100);
                 if(ctx.isPointInPath(mouseX, mouseY)){
-                    ctx.strokeStyle = "red"
-                    ctx.lineWidth = 10;
-                    ctx.stroke();
                     hoveredTile = square.tiles[row][col];
                     hoveredTileRow = row;
                     hoveredTileCol = col;
                 }
+                if(predictionLayer){
+                    ctx.globalAlpha = predictionLayer[row][col];
+                    ctx.fillStyle = "red";
+                    ctx.fillRect(0, 0, 100, 100);
+                }
+                
                 ctx.restore();
+
             }
+        }
+
+        if(hoveredTile){
+            ctx.save();
+            setTileCanvasTransform(ctx, square.size, hoveredTileRow, hoveredTileCol, mapZoom, mapDx, mapDy);
+            ctx.strokeStyle = "red"
+            ctx.lineWidth = 10;
+            ctx.strokeRect(0, 0, 100, 100);
+            ctx.restore();
+        }
+
+        if(selectedTileCol > -1 && selectedTileRow > -1){
+            ctx.save();
+            setTileCanvasTransform(ctx, square.size, selectedTileRow, selectedTileCol, mapZoom, mapDx, mapDy);
+            ctx.strokeStyle = "orange"
+            ctx.lineWidth = 10;
+            ctx.strokeRect(0, 0, 100, 100);
+            ctx.restore();
         }
 
     }
@@ -123,11 +151,29 @@ let createSquareUI = (square) => {
     }
     canvas.addEventListener('click', click);
 
-    
+    /**
+     * 
+     * @param {number} row 
+     * @param {number} col 
+     */
+    let setSelected = (row, col) => {
+        selectedTileCol = col;
+        selectedTileRow = row;
+    }
+
+    /**
+     * 
+     * @param {number[][] | null} newOdds
+     */
+    let setPredictionLayer = (newOdds) => {
+        predictionLayer = newOdds;
+    }
 
     let uiObject = {
         element: outerContainer,
         draw,
+        setSelected,
+        setPredictionLayer,
         addClickListener,
     }
     return uiObject;
@@ -135,7 +181,7 @@ let createSquareUI = (square) => {
 
 let TILE_COLOR_MAP = {
     "field": "green",
-    "fog": "#AAAAAA",
+    "fog": "#EEEEEE",
     "ocean": "blue",
     "water": "cyan",
     "mountain": "green",
