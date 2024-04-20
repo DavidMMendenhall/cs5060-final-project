@@ -34,6 +34,9 @@ let createSquareUI = (square) => {
     let selectedTileRow = -1;
     let selectedTileCol = -1;
 
+    /** @type {Set<string>} */
+    let highlightedTiles = new Set();
+
     /** @type {number[][] | null} */
     let predictionLayer = null;
     /**
@@ -101,10 +104,19 @@ let createSquareUI = (square) => {
                     hoveredTileRow = row;
                     hoveredTileCol = col;
                 }
-                if(predictionLayer){
+                if(predictionLayer && predictionLayer[row][col]){
                     ctx.globalAlpha = predictionLayer[row][col];
                     ctx.fillStyle = "red";
+                    ctx.textAlign = "center";
                     ctx.fillRect(0, 0, 100, 100);
+                    ctx.globalAlpha = 1;
+                    ctx.fillStyle='black';
+                    ctx.fillText(predictionLayer[row][col].toFixed(2), 50, 50);
+                }
+                if(highlightedTiles.has(`${row},${col}`)){
+                    ctx.strokeStyle = "magenta"
+                    ctx.lineWidth = 10;
+                    ctx.strokeRect(0, 0, 100, 100);
                 }
                 
                 ctx.restore();
@@ -171,6 +183,7 @@ let createSquareUI = (square) => {
 
     let uiObject = {
         element: outerContainer,
+        get highlightedTiles(){return highlightedTiles;},
         draw,
         setSelected,
         setPredictionLayer,
@@ -179,13 +192,25 @@ let createSquareUI = (square) => {
     return uiObject;
 }
 
-let TILE_COLOR_MAP = {
+const TILE_COLORS = {
     "field": "green",
     "fog": "#EEEEEE",
     "ocean": "blue",
     "water": "cyan",
-    "mountain": "green",
-    "village": "green",
+}
+
+const TILE_BG_COLOR_MAP = {
+    "fog": "fog",
+    "ocean": "ocean",
+    "water": "water",
+    "mountain": "field",
+    "metal": "field",
+    "village": "field",
+    "forest": "field",
+    "animal": "field",
+    "field": "field",
+    "fruit": "field",
+    "crop": "field",
 }
 
 /**
@@ -225,14 +250,36 @@ let setTileCanvasTransform = (ctx, mapSize, row, col, zoom, dx, dy) => {
  * @param {CanvasRenderingContext2D} ctx 
  */
 let renderTile = (tile, ctx) => {
-    ctx.fillStyle = TILE_COLOR_MAP[tile.type];
+    ctx.fillStyle = TILE_COLORS[TILE_BG_COLOR_MAP[tile.type]];
     ctx.fillRect(0, 0, 100, 100);
-    if(tile.type == TILE_TYPE.village){
+
+    let drawForest = () => {
         ctx.beginPath();
-        ctx.arc(50, 50, 25, 0, 2 * Math.PI);
-        ctx.fillStyle = "tan";
+        for(let x = 0; x < 3; x++){
+            for(let y = 0; y < 3; y++){
+                let _x = x * 30 + 20;
+                let _y = y * 30 + 22;
+                ctx.moveTo(_x + 5, _y);
+                ctx.arc(_x, _y, 10, 0, Math.PI * 2);
+            }
+        }
+        ctx.fillStyle = "brown"
         ctx.fill();
-    } else if (tile.type == TILE_TYPE.mountain){
+
+        ctx.beginPath();
+        for(let x = 0; x < 3; x++){
+            for(let y = 0; y < 3; y++){
+                let _x = x * 30 + 20;
+                let _y = y * 30 + 20;
+                ctx.moveTo(_x + 5, _y);
+                ctx.arc(_x, _y, 10, 0, Math.PI * 2);
+            }
+        }
+        ctx.fillStyle = "darkgreen"
+        ctx.fill();
+    }
+
+    let drawMountain = () => {
         // draw mountain triangle
         ctx.fillStyle = "grey";
         ctx.strokeStyle = "black";
@@ -254,72 +301,76 @@ let renderTile = (tile, ctx) => {
         ctx.stroke();
     }
 
-    if(tile.resources.has(RESOURCE_TYPE.forest)){
-        ctx.beginPath();
-        for(let x = 0; x < 3; x++){
-            for(let y = 0; y < 3; y++){
-                let _x = x * 30 + 12;
-                let _y = y * 30 + 15;
-                ctx.moveTo(_x + 5, _y);
-                ctx.arc(_x, _y, 10, 0, Math.PI * 2);
-            }
+    switch(tile.type){
+        case TILE_TYPE.village:{
+            ctx.beginPath();
+            ctx.arc(50, 50, 25, 0, 2 * Math.PI);
+            ctx.fillStyle = "tan";
+            ctx.fill();
+            break;
         }
-        ctx.fillStyle = "brown"
-        ctx.fill();
-
-        ctx.beginPath();
-        for(let x = 0; x < 3; x++){
-            for(let y = 0; y < 3; y++){
-                let _x = x * 30 + 12;
-                let _y = y * 30 + 12;
-                ctx.moveTo(_x + 5, _y);
-                ctx.arc(_x, _y, 10, 0, Math.PI * 2);
-            }
+        case TILE_TYPE.forest:{
+            drawForest();
+            break;
         }
-        ctx.fillStyle = "darkgreen"
-        ctx.fill();
-    }
-
-    if(tile.resources.has(RESOURCE_TYPE.crop)){
-        ctx.beginPath();
-        for(let x = 0; x < 3; x++){
-            for(let y = 0; y < 3; y++){
-                let _x = x * 30 + 12;
-                let _y = y * 30 + 12;
-                ctx.moveTo(_x + 5, _y);
-                ctx.arc(_x, _y, 10, 0, Math.PI * 2);
-            }
+        case TILE_TYPE.animal:{
+            drawForest();
+            ctx.beginPath();
+            ctx.arc(25, 50, 20, 0, 2 * Math.PI);
+            ctx.fillStyle = "orange";
+            ctx.fill();
+            break;
         }
-        ctx.fillStyle = "lime"
-        ctx.fill();
-    }
-
-    if(tile.resources.has(RESOURCE_TYPE.metal)){
-        ctx.beginPath();
-        for(let x = 1; x < 3; x++){
-            for(let y = 1; y < 3; y++){
-                let _x = x * 25 + 12;
-                let _y = y * 25 + 12;
-                ctx.moveTo(_x + 5, _y);
-                ctx.arc(_x, _y, 5, 0, Math.PI * 2);
-            }
+        case TILE_TYPE.mountain:{
+            drawMountain();
+            break;
         }
-        ctx.fillStyle = "gold"
-        ctx.fill();
+        case TILE_TYPE.metal:{
+            drawMountain();
+            ctx.beginPath();
+            for(let x = 1; x < 3; x++){
+                for(let y = 1; y < 3; y++){
+                    let _x = x * 25 + 12;
+                    let _y = y * 25 + 12;
+                    ctx.moveTo(_x + 5, _y);
+                    ctx.arc(_x, _y, 5, 0, Math.PI * 2);
+                }
+            }
+            ctx.fillStyle = "gold"
+            ctx.fill();
+            break;
+        }
+        case TILE_TYPE.crop:{
+            ctx.beginPath();
+            for(let x = 0; x < 4; x++){
+                for(let y = 0; y < 4; y++){
+                    let _x = x * 20 + 20;
+                    let _y = y * 20 + 20;
+                    ctx.moveTo(_x + 5, _y);
+                    ctx.arc(_x, _y, 5, 0, Math.PI * 2);
+                }
+            }
+            ctx.fillStyle = "lime"
+            ctx.fill();
+            break;
+        }
+        case TILE_TYPE.fruit:{
+            ctx.beginPath();
+            ctx.arc(75, 50, 20, 0, 2 * Math.PI);
+            ctx.fillStyle = "purple";
+            ctx.fill();
+            break;
+        }
+        case TILE_TYPE.water: // fallthrough
+        case TILE_TYPE.ocean: // fallthrough
+        case TILE_TYPE.field: // fallthrough
+        case TILE_TYPE.fog: break;
+        default:{
+            ctx.fillStyle = "black"
+            ctx.fillText(tile.type, 50, 50);
+        }
     }
-
-    if(tile.resources.has(RESOURCE_TYPE.animal)){
-        ctx.beginPath();
-        ctx.arc(25, 50, 20, 0, 2 * Math.PI);
-        ctx.fillStyle = "orange";
-        ctx.fill();
-    }
-    if(tile.resources.has(RESOURCE_TYPE.fruit)){
-        ctx.beginPath();
-        ctx.arc(75, 50, 20, 0, 2 * Math.PI);
-        ctx.fillStyle = "purple";
-        ctx.fill();
-    }
+    
     if(tile.resources.has(RESOURCE_TYPE.fish)){
         ctx.beginPath();
         ctx.arc(75, 50, 20, 0, 2 * Math.PI);

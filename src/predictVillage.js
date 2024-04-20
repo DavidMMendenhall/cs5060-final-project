@@ -84,7 +84,7 @@ PROB['village|mountain'] = PROB['village'] * PROB['mountain|village'] / PROB["mo
 let canHaveVillageInFog = (square, row, col) => {
     // check for edges and make sure tile in quesiton is fog
     if(row < 1 || col < 1 ||
-        row - 1 >= square.size || col - 1 >= square.size ||
+        row + 1 >= square.size || col + 1 >= square.size ||
         square.tiles[row][col].type != TILE_TYPE.fog){
         return false;
     }
@@ -98,15 +98,15 @@ let canHaveVillageInFog = (square, row, col) => {
     }
 
     // check there is no other village with-in 2 tiles
-    for(let r = -2; r < 3; r++){
-        if(row + r < 1 || row + r - 1>= square.size){
+    for(let r = row - 2; r <= row + 2; r++){
+        if(r < 0 || r >= square.size){
             continue;
         }
-        for(let c = -2; c < 3; c++){
-            if(col + c < 1 || col + c - 1 >= square.size){
+        for(let c = col-2; c <= col + 2; c++){
+            if(c < 0 || c >= square.size){
                 continue;
             }
-            if(square.tiles[row + r][col + c].type == TILE_TYPE.village){
+            if(square.tiles[r][c].type == TILE_TYPE.village){
                 return false;
             }
         }
@@ -161,42 +161,19 @@ let predictVillagesInFog = (square) => {
         }
     }
 
-    for(let row = 0; row < square.size; row++){
+    for(let row = 0; row < square.size; row ++){
         for(let col = 0; col < square.size; col ++){
             if(square.tiles[row][col].type == TILE_TYPE.fog){
+                if(canHaveVillageInFog(square, row, col)){
+                    result[row][col] += PROB["village"];
+                }
                 continue;
             }
             let nearbyFog = getFogTilesNearbyThatCanHaveVillages(square, row, col);
             if(nearbyFog.length == 0){
                 continue;
             }
-            let probNearVillage = 0;
-            switch(square.tiles[row][col].type){
-                case TILE_TYPE.mountain: {
-                    if(square.tiles[row][col].resources.has(RESOURCE_TYPE.metal)){
-                        probNearVillage = PROB["village|metal"];
-                    }else{
-                        probNearVillage = PROB["village|mountain"];
-                    }
-                    break;
-                };
-                case TILE_TYPE.field: {
-                    if(square.tiles[row][col].resources.has(RESOURCE_TYPE.crop)){
-                        probNearVillage = PROB["village|crop"];
-                    }else if(square.tiles[row][col].resources.has(RESOURCE_TYPE.fruit)){
-                        probNearVillage = PROB["village|fruit"];
-                    }else if(square.tiles[row][col].resources.has(RESOURCE_TYPE.animal)){
-                        probNearVillage = PROB["village|animal"];
-                    }else if(square.tiles[row][col].resources.has(RESOURCE_TYPE.forest)){
-                        probNearVillage = PROB["village|forest"];
-                    }else{
-                        probNearVillage = PROB["village|field"];
-                    }
-                    break;
-                };
-                default:break;;
-            }
-
+            let probNearVillage = PROB[`village|${square.tiles[row][col].type}`] || 0;
             let oddsPerTile = probNearVillage / nearbyFog.length;
             for(let fogTile of nearbyFog){
                 result[fogTile.row][fogTile.col] += oddsPerTile;

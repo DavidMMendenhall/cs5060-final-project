@@ -47,6 +47,7 @@ let addUpdateListener = (callback) => {
 
 let tileTypeInput = document.createElement("select");
 tileTypeInput.id = "tile_type_input"
+tileTypeInput.size = 15;
 
 for(let tileType in TILE_TYPE) {
     let option = document.createElement("option");

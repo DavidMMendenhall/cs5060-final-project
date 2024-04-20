@@ -9,6 +9,11 @@ let TILE_TYPE = {
     water: "water",
     ocean: "ocean",
     mountain: "mountain",
+    metal: "metal",
+    forest: "forest",
+    animal: "animal",
+    fruit: "fruit",
+    crop: "crop",
     village: "village",
     field: "field",
     fog: "fog",
@@ -19,17 +24,12 @@ let TILE_TYPE = {
  * @enum {String}
  */
 let RESOURCE_TYPE = {
-    forest: "forest",
-    fruit: "fruit",
-    metal: "metal",
-    animal: "animal",
     ruin: "ruin",
     fish: "fish",
     star_fish: "star_fish",
-    crop: "crop"
 }
 
-let TILE_RESOURCE_ALLOWED_TABLE = {
+const TILE_RESOURCE_ALLOWED_TABLE = {
     "ocean": {
         resources: {
             "fish": 1,
